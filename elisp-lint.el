@@ -36,15 +36,17 @@
 (require 'bytecomp)
 (require 'package nil t)
 
+(defconst elisp-lint-file-validators '("byte-compile"))
+(defconst elisp-lint-buffer-validators '("package-format" "indent"))
+
 (defmacro elisp-lint--protect (&rest body)
   (declare (indent 0) (debug t))
   `(condition-case err
        (progn ,@body)
      (error (message "%s" (error-message-string err)) nil)))
 
-(defmacro elisp-lint--run (&rest body)
-  (declare (indent 0) (debug t))
-  `(setq success (and (elisp-lint--protect ,@body) success)))
+(defmacro elisp-lint--run (name &rest args)
+  `(elisp-lint--protect (funcall (intern (concat "elisp-lint--" ,name)) ,@args)))
 
 ;; validators
 
@@ -67,11 +69,14 @@
 
 (defun elisp-lint-file (file)
   (let ((success t))
-    (elisp-lint--run (elisp-lint--byte-compile file))
+    (mapc (lambda (validator)
+            (setq success (and (elisp-lint--run validator file) success)))
+          elisp-lint-file-validators)
     (with-temp-buffer
       (find-file file)
-      (elisp-lint--run (elisp-lint--package-format))
-      (elisp-lint--run (elisp-lint--indent)))
+      (mapc (lambda (validator)
+              (setq success (and (elisp-lint--run validator) success)))
+            elisp-lint-buffer-validators))
     success))
 
 (defun elisp-lint-files-batch ()
