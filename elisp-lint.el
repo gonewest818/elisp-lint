@@ -36,6 +36,8 @@
 (require 'bytecomp)
 (require 'package nil t)
 
+(declare-function package-buffer-info "package" t)
+
 (defconst elisp-lint-file-validators '("byte-compile"))
 (defconst elisp-lint-buffer-validators
   '("package-format" "indent" "fill-column"))
