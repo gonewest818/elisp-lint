@@ -115,8 +115,12 @@
              (mapconcat 'identity elisp-lint-ignored-validators ", ")))
   (let ((success t))
     (while command-line-args-left
-      (setq success (and (elisp-lint-file (car command-line-args-left)) success)
-            command-line-args-left (cdr command-line-args-left)))
+      (message "%s..." (car command-line-args-left))
+      (if (elisp-lint-file (car command-line-args-left))
+          (message "%s...OK" (car command-line-args-left))
+        (message "%s...FAIL" (car command-line-args-left))
+        (setq success nil))
+      (pop command-line-args-left))
     (kill-emacs (if success 0 1))))
 
 (provide 'elisp-lint)
