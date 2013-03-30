@@ -37,7 +37,8 @@
 (require 'package nil t)
 
 (defconst elisp-lint-file-validators '("byte-compile"))
-(defconst elisp-lint-buffer-validators '("package-format" "indent"))
+(defconst elisp-lint-buffer-validators
+  '("package-format" "indent" "fill-column"))
 
 (defvar elisp-lint-ignored-validators nil
   "List of validators that should not be run.")
@@ -75,6 +76,23 @@
     (indent-region (point-min) (point-max))
     (or (equal tick (buffer-modified-tick))
         (error "Indentation incorrect."))))
+
+(defun elisp-lint--fill-column ()
+  (save-excursion
+    (let ((line-number 1)
+          (too-long-lines nil))
+      (goto-char (point-min))
+      (while (not (eobp))
+        (goto-char (point-at-eol))
+        (when (> (current-column) fill-column)
+          (push line-number too-long-lines))
+        (setq line-number (1+ line-number))
+        (forward-line 1))
+      (or (null too-long-lines)
+          (error "Lines longer than %d characters: %s"
+                 fill-column
+                 (mapconcat 'number-to-string (sort too-long-lines '<)
+                            ", "))))))
 
 ;; linting
 
