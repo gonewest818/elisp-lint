@@ -39,6 +39,10 @@
 (defconst elisp-lint-file-validators '("byte-compile"))
 (defconst elisp-lint-buffer-validators '("package-format" "indent"))
 
+(defvar elisp-lint-ignored-validators nil
+  "List of validators that should not be run.")
+(put 'elisp-lint-ignored-validators 'safe-local-variable 'listp)
+
 (defmacro elisp-lint--protect (&rest body)
   (declare (indent 0) (debug t))
   `(condition-case err
@@ -46,7 +50,9 @@
      (error (message "%s" (error-message-string err)) nil)))
 
 (defmacro elisp-lint--run (name &rest args)
-  `(elisp-lint--protect (funcall (intern (concat "elisp-lint--" ,name)) ,@args)))
+  `(or (member ,name elisp-lint-ignored-validators)
+       (elisp-lint--protect (funcall (intern (concat "elisp-lint--" ,name))
+                                     ,@args))))
 
 ;; validators
 
@@ -80,6 +86,8 @@
     success))
 
 (defun elisp-lint-files-batch ()
+  (message "Ignoring validators: %s"
+           (mapconcat 'identity elisp-lint-ignored-validators ", "))
   (let ((success t))
     (while command-line-args-left
       (setq success (and (elisp-lint-file (car command-line-args-left)) success)
