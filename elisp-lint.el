@@ -99,22 +99,22 @@
 ;; linting
 
 (defun elisp-lint-file (file)
-  (let ((success t))
-    (mapc (lambda (validator)
-            (setq success (and (elisp-lint--run validator file) success)))
-          elisp-lint-file-validators)
-    (with-temp-buffer
-      (find-file file)
+  (with-temp-buffer
+    (find-file file)
+    (when elisp-lint-ignored-validators
+      (message "Ignoring validators: %s"
+               (mapconcat 'identity elisp-lint-ignored-validators ", ")))
+    (let ((success t))
+      (mapc (lambda (validator)
+              (setq success (and (elisp-lint--run validator file) success)))
+            elisp-lint-file-validators)
       (mapc (lambda (validator)
               (setq success (and (elisp-lint--run validator) success)))
-            elisp-lint-buffer-validators))
-    success))
+            elisp-lint-buffer-validators)
+      success)))
 
 (defun elisp-lint-files-batch ()
   (elisp-lint--amend-ignored-validators-from-command-line)
-  (when elisp-lint-ignored-validators
-    (message "Ignoring validators: %s"
-             (mapconcat 'identity elisp-lint-ignored-validators ", ")))
   (let ((success t))
     (while command-line-args-left
       (message "%s..." (car command-line-args-left))
