@@ -25,6 +25,23 @@
 ;;
 ;;; Commentary:
 ;;
+;; This is a tool for finding certain problems in Emacs Lisp files. Use it on
+;; the command line like this:
+;;
+;; emacs -Q --batch -l elisp-lint.el -f elisp-lint-files-batch *.el
+;;
+;; You can disable individual checks, by passing flags on the command line:
+;;
+;; emacs -Q --batch -l elisp-lint.el -f elisp-lint-files-batch --no-indent *.el
+;;
+;; Alternatively, you can disable checks using file variables or the following
+;; .dir.locals file:
+;;
+;; ((nil . ((elisp-lint-ignored-validators . ("fill-column")))))
+;;
+;; For a full list of validators, see `elisp-lint-file-validators' and
+;; `elisp-lint-buffer-validators'.
+;;
 ;;; Change Log:
 ;;
 ;;    Initial release.
@@ -65,21 +82,26 @@
 ;; validators
 
 (defun elisp-lint--byte-compile (file)
+  "Byte-compiles the file with all warnings enabled."
   (let ((byte-compile-error-on-warn t)
         (byte-compile-warnings t))
     (byte-compile-file file)))
 
 (defun elisp-lint--package-format ()
+  "Calls `package-buffer-info' to validate some file metadata."
   (or (null (require 'package nil t))
       (package-buffer-info)))
 
 (defun elisp-lint--indent ()
+  "Verifies that each line is indented according to `emacs-lisp-mode'."
   (let ((tick (buffer-modified-tick)))
     (indent-region (point-min) (point-max))
     (or (equal tick (buffer-modified-tick))
         (error "Indentation incorrect."))))
 
 (defun elisp-lint--fill-column ()
+  "Verifies that no line exceeds the number of columns in fill-column.
+Use a file variable or a .dir.locals file to override the value."
   (save-excursion
     (let ((line-number 1)
           (too-long-lines nil))
