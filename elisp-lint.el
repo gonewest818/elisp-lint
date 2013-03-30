@@ -54,6 +54,11 @@
        (elisp-lint--protect (funcall (intern (concat "elisp-lint--" ,name))
                                      ,@args))))
 
+(defun elisp-lint--amend-ignored-validators-from-command-line ()
+  (while (string-match "^--no-\\([a-z-]*\\)" (car command-line-args-left))
+    (add-to-list 'elisp-lint-ignored-validators
+                 (match-string 1 (pop command-line-args-left)))))
+
 ;; validators
 
 (defun elisp-lint--byte-compile (file)
@@ -86,8 +91,10 @@
     success))
 
 (defun elisp-lint-files-batch ()
-  (message "Ignoring validators: %s"
-           (mapconcat 'identity elisp-lint-ignored-validators ", "))
+  (elisp-lint--amend-ignored-validators-from-command-line)
+  (when elisp-lint-ignored-validators
+    (message "Ignoring validators: %s"
+             (mapconcat 'identity elisp-lint-ignored-validators ", ")))
   (let ((success t))
     (while command-line-args-left
       (setq success (and (elisp-lint-file (car command-line-args-left)) success)
