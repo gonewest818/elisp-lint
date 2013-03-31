@@ -57,7 +57,7 @@
 
 (defconst elisp-lint-file-validators '("byte-compile"))
 (defconst elisp-lint-buffer-validators
-  '("package-format" "indent" "fill-column"))
+  '("package-format" "indent" "fill-column" "trailing-whitespace"))
 
 (defvar elisp-lint-ignored-validators nil
   "List of validators that should not be run.")
@@ -117,6 +117,17 @@ Use a file variable or a .dir.locals file to override the value."
                  fill-column
                  (mapconcat 'number-to-string (sort too-long-lines '<)
                             ", "))))))
+
+(defun elisp-lint--trailing-whitespace ()
+  "Verifies that no line contains trailing whitespace."
+  (save-excursion
+    (let ((lines nil))
+      (goto-char (point-min))
+      (while (re-search-forward "[[:space:]]+$" nil t)
+        (push (count-lines (point-min) (point)) lines))
+      (or (null lines)
+          (error "Line numbers with trailing whitespace: %s"
+                 (mapconcat 'number-to-string (sort lines '<) ", "))))))
 
 ;; linting
 
