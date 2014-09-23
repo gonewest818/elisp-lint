@@ -1,5 +1,5 @@
-full-ack
-========
+elisp-lint
+==========
 
 Basic linting for Emacs Lisp
 
