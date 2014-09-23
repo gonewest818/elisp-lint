@@ -57,7 +57,8 @@
 
 (defconst elisp-lint-file-validators '("byte-compile"))
 (defconst elisp-lint-buffer-validators
-  '("package-format" "indent" "fill-column" "trailing-whitespace"))
+  '("package-format" "indent" "indent-character" "fill-column"
+    "trailing-whitespace"))
 
 (defvar elisp-lint-ignored-validators nil
   "List of validators that should not be run.")
@@ -99,6 +100,30 @@
     (or (equal tick (buffer-modified-tick))
         (error "Indentation incorrect."))))
 
+(defun elisp-lint--indent-character ()
+  "Verifies that each line is indented according to `indent-tabs-mode`.
+Use a file variable or a .dir.locals file to set the value."
+  (let ((lines nil)
+        (re (if indent-tabs-mode
+                (elisp-lint--not-tab-regular-expression)
+              "^\t"))
+        (msg (if indent-tabs-mode
+                 "spaces instead of tabs"
+               "tabs instead of spaces")))
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward re nil t)
+        (push (count-lines (point-min) (point)) lines)))
+    (or (null lines)
+        (error "Lines indented with %s: %s" msg
+               (elisp-lint--join-lines lines)))))
+
+(defun elisp-lint--not-tab-regular-expression ()
+  (concat "^" (make-string tab-width ? )))
+
+(defun elisp-lint--join-lines (lines)
+  (mapconcat (lambda (i) (format "#%d" i)) (sort lines '<) ", "))
+
 (defun elisp-lint--fill-column ()
   "Verifies that no line exceeds the number of columns in fill-column.
 Use a file variable or a .dir.locals file to override the value."
@@ -114,9 +139,7 @@ Use a file variable or a .dir.locals file to override the value."
         (forward-line 1))
       (or (null too-long-lines)
           (error "Lines longer than %d characters: %s"
-                 fill-column
-                 (mapconcat 'number-to-string (sort too-long-lines '<)
-                            ", "))))))
+                 fill-column (elisp-lint--join-lines too-long-lines))))))
 
 (defun elisp-lint--trailing-whitespace ()
   "Verifies that no line contains trailing whitespace."
