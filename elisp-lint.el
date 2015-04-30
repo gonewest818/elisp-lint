@@ -150,7 +150,7 @@ Use a file variable or a .dir.locals file to override the value."
         (push (count-lines (point-min) (point)) lines))
       (or (null lines)
           (error "Line numbers with trailing whitespace: %s"
-                 (mapconcat 'number-to-string (sort lines '<) ", "))))))
+                 (elisp-lint--join-lines (sort lines '<)))))))
 
 ;; linting
 
