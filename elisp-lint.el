@@ -1,6 +1,6 @@
 ;;; elisp-lint.el --- basic linting for Emacs Lisp
 ;;
-;; Copyright (C) 2013, 2014 Nikolaj Schumacher
+;; Copyright (C) 2013-2015 Nikolaj Schumacher
 ;;
 ;; Author: Nikolaj Schumacher <bugs * nschum de>
 ;; Version: 0.1
