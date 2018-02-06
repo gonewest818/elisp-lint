@@ -98,7 +98,12 @@
   (let ((tick (buffer-modified-tick)))
     (indent-region (point-min) (point-max))
     (or (equal tick (buffer-modified-tick))
-        (error "Indentation incorrect."))))
+        (progn
+          (diff-buffer-with-file)
+          (with-current-buffer "*Diff*"
+            (message (buffer-string))
+            (kill-buffer))
+          (error "Indentation incorrect.")))))
 
 (defun elisp-lint--indent-character ()
   "Verifies that each line is indented according to `indent-tabs-mode`.
