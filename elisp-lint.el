@@ -142,12 +142,17 @@ Use a file variable or a .dir.locals file to override the value."
                  fill-column (elisp-lint--join-lines too-long-lines))))))
 
 (defun elisp-lint--trailing-whitespace ()
-  "Verifies that no line contains trailing whitespace."
+  "Verifies that no line contains trailing whitespace.
+Allows `page-delimiter` if it is alone on a line."
   (save-excursion
     (let ((lines nil))
       (goto-char (point-min))
       (while (re-search-forward "[[:space:]]+$" nil t)
-        (push (count-lines (point-min) (point)) lines))
+        (unless (string-match-p
+                 (concat page-delimiter "$") ; allow a solo page-delimiter
+                 (buffer-substring-no-properties (line-beginning-position)
+                                                 (line-end-position)))
+          (push (count-lines (point-min) (point)) lines)))
       (or (null lines)
           (error "Line numbers with trailing whitespace: %s"
                  (elisp-lint--join-lines (sort lines '<)))))))
