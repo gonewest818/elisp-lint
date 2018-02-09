@@ -51,11 +51,15 @@
 ;; helpers
 
 (require 'bytecomp)
+(require 'checkdoc)
 (require 'package nil t)
 
 (declare-function package-buffer-info "package" t)
 
-(defconst elisp-lint-file-validators '("byte-compile"))
+(defconst elisp-lint-file-validators
+  (nconc '("byte-compile")
+         (when (fboundp 'checkdoc-file) '("checkdoc"))))
+
 (defconst elisp-lint-buffer-validators
   '("package-format" "indent" "indent-character" "fill-column"
     "trailing-whitespace"))
@@ -82,8 +86,11 @@ identical to the indent declarations in defmacro.")
 
 (defmacro elisp-lint--run (name &rest args)
   `(or (member ,name elisp-lint-ignored-validators)
-       (elisp-lint--protect (funcall (intern (concat "elisp-lint--" ,name))
-                                     ,@args))))
+       (progn
+         (message "%s" (make-string 75 ?\*))
+         (message "** ELISP-LINT: run %s" ,name)
+         (elisp-lint--protect (funcall (intern (concat "elisp-lint--" ,name))
+                                       ,@args)))))
 
 (defun elisp-lint--amend-ignored-validators-from-command-line ()
   (while (string-match "^--no-\\([a-z-]*\\)" (car command-line-args-left))
@@ -97,6 +104,17 @@ identical to the indent declarations in defmacro.")
   (let ((byte-compile-error-on-warn t)
         (byte-compile-warnings t))
     (byte-compile-file file)))
+
+;; Emacs 25 or better
+(when (fboundp 'checkdoc-file)
+  (defun elisp-lint--checkdoc (file)
+    "Run checkdoc on the file and print results.
+Return nil if errors were found, else t."
+    (let* ((msgbuf (get-buffer "*Messages*"))
+           (tick (buffer-modified-tick msgbuf)))
+      (checkdoc-file file)
+      (or (equal tick (buffer-modified-tick msgbuf))
+          (error "Checkdoc failed")))))
 
 (defun elisp-lint--package-format ()
   "Calls `package-buffer-info' to validate some file metadata."
@@ -119,7 +137,7 @@ symbols (typically macros) that require special handling."
         (progn
           (diff-buffer-with-file)
           (with-current-buffer "*Diff*"
-            (message (buffer-string))
+            (message "%s" (buffer-string))
             (kill-buffer))
           (error "Indentation is incorrect")))))
 
@@ -186,7 +204,7 @@ Allows `page-delimiter` if it is alone on a line."
   (with-temp-buffer
     (find-file file)
     (when elisp-lint-ignored-validators
-      (message "Ignoring validators: %s"
+      (message "** ELISP-LINT: Ignoring validators: %s"
                (mapconcat 'identity elisp-lint-ignored-validators ", ")))
     (let ((success t))
       (mapc (lambda (validator)
