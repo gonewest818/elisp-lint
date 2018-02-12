@@ -142,9 +142,8 @@ results to the filesystem.  Print diffs if there are any
 discrepancies.  Prior to indenting the buffer, apply the settings
 provided in `elisp-lint-indent-specs' to configure specific
 symbols (typically macros) that require special handling."
-  (mapc (lambda (s)
-          (put (car s) 'lisp-indent-function (cdr s)))
-        elisp-lint-indent-specs)
+  (dolist (s elisp-lint-indent-specs)
+    (put (car s) 'lisp-indent-function (cdr s)))
   (let ((tick (buffer-modified-tick)))
     (indent-region (point-min) (point-max))
     (or (equal tick (buffer-modified-tick))
