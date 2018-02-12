@@ -25,7 +25,7 @@
 ;;
 ;;; Commentary:
 ;;
-;; This is a tool for finding certain problems in Emacs Lisp files. Use it on
+;; This is a tool for finding certain problems in Emacs Lisp files.  Use it on
 ;; the command line like this:
 ;;
 ;; emacs -Q --batch -l elisp-lint.el -f elisp-lint-files-batch *.el
@@ -64,6 +64,16 @@
   "List of validators that should not be run.")
 (put 'elisp-lint-ignored-validators 'safe-local-variable 'listp)
 
+(defvar elisp-lint-indent-specs nil
+  "Alist of symbols and their indent specifiers.
+The `lisp-indent-function' will be set accordingly for each of
+the provided symbols prior to running the indentation check.
+Caller can set this variable as needed on the command line or in
+`.dir.locals.el'.  The alist should take the form
+`((symbol1 . spec1) (symbol2 . spec2) ...)' where the specs are
+identical to the indent declarations in defmacro.")
+(put 'elisp-lint-indent-specs 'safe-local-variable 'listp)
+
 (defmacro elisp-lint--protect (&rest body)
   (declare (indent 0) (debug t))
   `(condition-case err
@@ -94,11 +104,23 @@
       (package-buffer-info)))
 
 (defun elisp-lint--indent ()
-  "Verifies that each line is indented according to `emacs-lisp-mode'."
+  "Confirm buffer indentation is consistent with `emacs-lisp-mode'.
+Use `indent-region' to format the entire buffer, and compare the
+results to the filesystem. Print diffs if there are any
+discrepancies.  Prior to indenting the buffer, apply the settings
+provided in `elisp-lint-indent-specs' to configure specific
+symbols (typically macros) that require special handling."
+  (dolist (s elisp-lint-indent-specs)
+    (put (car s) 'lisp-indent-function (cdr s)))
   (let ((tick (buffer-modified-tick)))
     (indent-region (point-min) (point-max))
     (or (equal tick (buffer-modified-tick))
-        (error "Indentation incorrect."))))
+        (progn
+          (diff-buffer-with-file)
+          (with-current-buffer "*Diff*"
+            (message (buffer-string))
+            (kill-buffer))
+          (error "Indentation is incorrect")))))
 
 (defun elisp-lint--indent-character ()
   "Verifies that each line is indented according to `indent-tabs-mode`.
