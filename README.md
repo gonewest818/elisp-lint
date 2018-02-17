@@ -3,7 +3,8 @@ elisp-lint
 
 Basic linting for Emacs Lisp
 
-[![Build Status](https://travis-ci.org/nschum/elisp-lint.png?branch=master)](https://travis-ci.org/nschum/elisp-lint)
+[![MELPA](https://melpa.org/packages/elisp-lint-badge.svg)](https://melpa.org/#/elisp-lint)
+[![Build Status](https://travis-ci.org/gonewest818/elisp-lint.png?branch=master)](https://travis-ci.org/gonewest818/elisp-lint)
 
 This is a tool for finding certain problems in Emacs Lisp files. Use it on the command line like this:
 
@@ -24,16 +25,48 @@ Validators
 
 Byte-compiles the file with all warnings enabled.
 
+### checkdoc ###
+
+Runs checkdoc on the file to enforce standards in documentation.
+
+### fill-column ###
+
+Verifies that no line exceeds the number of columns in `fill-column`.
+
+### indent ###
+
+Verifies that each line is indented according to `emacs-lisp-mode`. Where macros
+are defined with special `indent` metadata, use the `lintel-indent-specs` alist
+to specify each symbol's required indent.
+
+### indent-character ###
+
+Verifies the indentation is consistently tabs or spaces, according to the value
+of `indent-tabs-mode`.
+
 ### package-format ###
 
 Calls `package-buffer-info` to validate some file metadata.
 
-### indent ###
+### trailing-whitespace ###
 
-Verifies that each line is indented according to emacs-lisp-mode.
+Verifies the buffer has no lines with trailing whitespace.
 
-### fill-column ###
+Configuration
+-------------
 
-Verifies that no line exceeds the number of columns in fill-column. Use a file variable or a .dir.locals file to override the value.
+Use a file variable or `.dir-locals.el` to override the variables mentioned
+above.
 
-Pull requests for further tests are welcome.
+Credits
+-------
+
+The initial development of `elisp-lint` is Copyright 2013-2015 Nikolaj
+Schumacher. This project was transferred to Neil Okamoto in 2018.
+
+Updates and ongoing development are Copyright 2018 Neil Okamoto and contributors.
+
+Contributing
+------------
+
+Pull requests are welcome!

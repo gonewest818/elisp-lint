@@ -6,9 +6,9 @@
 ;; Author: Nikolaj Schumacher <bugs * nschum de>,
 ;; Author: Neil Okamoto <neil.okamoto+melpa@gmail.com>
 ;; Version: 0.2
-;; Keywords: lisp
-;; URL: http://github.com/nschum/elisp-lint/
-;; Compatibility: GNU Emacs 23.x, GNU Emacs 24.x
+;; Keywords: lisp, maint, tools
+;; Package-Requires: ((emacs "25"))
+;; URL: http://github.com/gonewest818/elisp-lint/
 ;;
 ;; This file is NOT part of GNU Emacs.
 ;;
@@ -32,13 +32,13 @@
 ;;
 ;; $(EMACS) -Q --batch -l elisp-lint.el -f elisp-lint-files-batch *.el
 ;;
-;; You can disable individual checks, by passing flags on the command line:
+;; You can disable individual checks by passing flags on the command line:
 ;;
 ;; $(EMACS) -Q --batch -l elisp-lint.el -f elisp-lint-files-batch \
 ;;          --no-indent *.el
 ;;
 ;; Alternatively, you can disable checks using file variables or the following
-;; .dir.locals file:
+;; .dir-locals.el file:
 ;;
 ;; ((nil . ((elisp-lint-ignored-validators . ("fill-column")))))
 ;;
@@ -47,17 +47,16 @@
 ;;
 ;;; Change Log:
 ;;
-;;  * Version 0.2:
+;; * Version 0.2:
+;;    - Project transferred to new maintainer
 ;;    - Whitespace check permits page-delimiter (^L)
 ;;    - Indentation check prints the diff to console
 ;;    - User can specify indent specs to tell the checker about macros
-;;    - Added checkdoc for Emacs 25 and newer
+;;    - Added checkdoc (require Emacs 25 and newer)
 ;;    - Cleared up the console output for easier reading in CI
 ;;    - Expand Travis CI test matrix to include Emacs 25 and 26
 ;;
 ;;; Code:
-
-;; helpers
 
 (require 'bytecomp)
 (require 'checkdoc)
@@ -110,7 +109,7 @@ identical to the indent declarations in defmacro.")
     (add-to-list 'elisp-lint-ignored-validators
                  (match-string 1 (pop command-line-args-left)))))
 
-;; Validators
+;;; Validators
 
 (defun elisp-lint--byte-compile (file)
   "Byte-compile FILE with warnings enabled.
@@ -213,7 +212,7 @@ Allow `page-delimiter` if it is alone on a line."
           (error "Line numbers with trailing whitespace: %s"
                  (elisp-lint--join-lines (sort lines '<)))))))
 
-;; Linting
+;;; Linting
 
 (defun elisp-lint-file (file)
   "Run validators on FILE."
@@ -245,4 +244,5 @@ Allow `page-delimiter` if it is alone on a line."
     (kill-emacs (if success 0 1))))
 
 (provide 'elisp-lint)
+
 ;;; elisp-lint.el ends here
