@@ -10,13 +10,19 @@ This is a tool for finding certain problems in Emacs Lisp files. Use it on the c
 
     emacs -Q --batch -l elisp-lint.el -f elisp-lint-files-batch *.el
 
-You can disable individual checks, by passing flags on the command line:
+You can disable individual checks by passing flags on the command line:
 
     emacs -Q --batch -l elisp-lint.el -f elisp-lint-files-batch --no-indent *.el
 
-Alternatively, you can disable checks using file variables or the following .dir.locals file:
+You can use file variables or `.dir-locals.el` to disable checks completely, and
+also to configure certain checks as described below.
 
-    ((nil . ((elisp-lint-ignored-validators . ("fill-column")))))
+    ((nil . ((elisp-lint-ignored-validators . ("byte-compile"))
+             (fill-column . 80)
+             (indent-tabs-mode . nil)
+             (elint-lisp-indent-specs . ((describe . 1)
+                                         (it . 1))))))
+
 
 Validators
 ----------
@@ -36,7 +42,7 @@ Verifies that no line exceeds the number of columns in `fill-column`.
 ### indent ###
 
 Verifies that each line is indented according to `emacs-lisp-mode`. Where macros
-are defined with special `indent` metadata, use the `lintel-indent-specs` alist
+are defined with special `indent` metadata, use the `elisp-lint-indent-specs` alist
 to specify each symbol's required indent.
 
 ### indent-character ###
