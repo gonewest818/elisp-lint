@@ -40,7 +40,7 @@
 ;; Alternatively, you can disable checks using file variables or the following
 ;; .dir-locals.el file:
 ;;
-;; ((nil . ((elisp-lint-ignored-validators . ("fill-column")))))
+;; ((emacs-lisp-mode . ((elisp-lint-ignored-validators . ("fill-column")))))
 ;;
 ;; For a full list of validators, see `elisp-lint-file-validators' and
 ;; `elisp-lint-buffer-validators'.

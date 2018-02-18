@@ -17,9 +17,9 @@ You can disable individual checks by passing flags on the command line:
 You can use file variables or `.dir-locals.el` to disable checks completely, and
 also to configure certain checks as described below.
 
-    ((nil . ((fill-column . 80)
-             (indent-tabs-mode . nil)))
-     (emacs-lisp-mode . ((elisp-lint-ignored-validators . ("byte-compile"))
+    ((emacs-lisp-mode . ((fill-column . 80)
+                         (indent-tabs-mode . nil)
+                         (elisp-lint-ignored-validators . ("byte-compile"))
                          (elisp-lint-indent-specs . ((describe . 1)
                                                      (it . 1))))))
 
