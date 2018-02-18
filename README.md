@@ -17,12 +17,11 @@ You can disable individual checks by passing flags on the command line:
 You can use file variables or `.dir-locals.el` to disable checks completely, and
 also to configure certain checks as described below.
 
-    ((nil . ((elisp-lint-ignored-validators . ("byte-compile"))
-             (fill-column . 80)
-             (indent-tabs-mode . nil)
-             (elint-lisp-indent-specs . ((describe . 1)
-                                         (it . 1))))))
-
+    ((nil . ((fill-column . 80)
+             (indent-tabs-mode . nil)))
+     (emacs-lisp-mode . ((elisp-lint-ignored-validators . ("byte-compile"))
+                         (elint-lisp-indent-specs . ((describe . 1)
+                                                     (it . 1))))))
 
 Validators
 ----------
