@@ -20,7 +20,7 @@ also to configure certain checks as described below.
     ((nil . ((fill-column . 80)
              (indent-tabs-mode . nil)))
      (emacs-lisp-mode . ((elisp-lint-ignored-validators . ("byte-compile"))
-                         (elint-lisp-indent-specs . ((describe . 1)
+                         (elisp-lint-indent-specs . ((describe . 1)
                                                      (it . 1))))))
 
 Validators
