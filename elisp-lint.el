@@ -81,9 +81,9 @@
 The property 'lisp-indent-function will be set accordingly on
 each of the provided symbols prior to running the indentation
 check.  Caller can set this variable as needed on the command
-line or in `.dir.locals.el'.  The alist should take the form
+line or in `.dir-locals.el'.  The alist should take the form
 `((symbol1 . spec1) (symbol2 . spec2) ...)' where the specs are
-identical to the indent declarations in defmacro.")
+identical to the `indent' declarations in defmacro.")
 (put 'elisp-lint-indent-specs 'safe-local-variable 'listp)
 
 (defmacro elisp-lint--protect (&rest body)
@@ -97,8 +97,7 @@ identical to the indent declarations in defmacro.")
   "Run the VALIDATOR with ARGS."
   `(or (member ,validator elisp-lint-ignored-validators)
        (progn
-         (message "%s" (make-string 75 ?\*))
-         (message "** ELISP-LINT: running %s" ,validator)
+         (message "Run %s" ,validator)
          (elisp-lint--protect (funcall
                                (intern (concat "elisp-lint--" ,validator))
                                ,@args)))))
@@ -219,7 +218,7 @@ Allow `page-delimiter` if it is alone on a line."
   (with-temp-buffer
     (find-file file)
     (when elisp-lint-ignored-validators
-      (message "** ELISP-LINT: Ignoring validators: %s"
+      (message "** Ignoring validators: %s"
                (mapconcat 'identity elisp-lint-ignored-validators ", ")))
     (let ((success t))
       (mapc (lambda (validator)
@@ -235,10 +234,11 @@ Allow `page-delimiter` if it is alone on a line."
   (elisp-lint--amend-ignored-validators-from-command-line)
   (let ((success t))
     (while command-line-args-left
-      (message "%s..." (car command-line-args-left))
+      (message "%s" (make-string 75 ?\*))
+      (message "** ELISP-LINT: check %s..." (car command-line-args-left))
       (if (elisp-lint-file (car command-line-args-left))
-          (message "%s...OK" (car command-line-args-left))
-        (message "%s...FAIL" (car command-line-args-left))
+          (message "** ELISP-LINT: %s OK" (car command-line-args-left))
+        (message "** ELISP:LINT: %s FAIL" (car command-line-args-left))
         (setq success nil))
       (pop command-line-args-left))
     (kill-emacs (if success 0 1))))
