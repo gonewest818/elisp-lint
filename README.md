@@ -3,6 +3,7 @@ elisp-lint
 
 Basic linting for Emacs Lisp
 
+[![MELPA Stable](https://stable.melpa.org/packages/elisp-lint-badge.svg)](https://stable.melpa.org/#/elisp-lint)
 [![MELPA](https://melpa.org/packages/elisp-lint-badge.svg)](https://melpa.org/#/elisp-lint)
 [![Build Status](https://travis-ci.org/gonewest818/elisp-lint.png?branch=master)](https://travis-ci.org/gonewest818/elisp-lint)
 [![CircleCI](https://img.shields.io/circleci/project/github/gonewest818/elisp-lint.svg)](https://circleci.com/gh/gonewest818/elisp-lint)
