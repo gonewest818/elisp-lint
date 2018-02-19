@@ -5,6 +5,8 @@ Basic linting for Emacs Lisp
 
 [![MELPA](https://melpa.org/packages/elisp-lint-badge.svg)](https://melpa.org/#/elisp-lint)
 [![Build Status](https://travis-ci.org/gonewest818/elisp-lint.png?branch=master)](https://travis-ci.org/gonewest818/elisp-lint)
+[![CircleCI](https://img.shields.io/circleci/project/github/gonewest818/elisp-lint.svg)](https://circleci.com/gh/gonewest818/elisp-lint)
+[![codecov](https://codecov.io/gh/gonewest818/elisp-lint/branch/master/graph/badge.svg)](https://codecov.io/gh/gonewest818/elisp-lint)
 
 This is a tool for finding certain problems in Emacs Lisp files. Use it on the command line like this:
 
