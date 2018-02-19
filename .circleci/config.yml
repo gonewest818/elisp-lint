@@ -40,7 +40,7 @@ jobs:
         entrypoint: bash
     steps:
       - checkout
-      - run: make submit-coverage
+      - run: make clean submit-coverage
 
 # Executing in parallel
 workflows:
