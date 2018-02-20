@@ -66,6 +66,22 @@ Configuration
 Use a file variable or `.dir-locals.el` to override the variables mentioned
 above.
 
+Changelog
+---------
+
+* Version 0.3 (MELPA)
+   - Emacs 23 support is deprecated
+* Version 0.2.0 (MELPA Stable - Feb 2018)
+   - Project transferred to new maintainer
+   - Whitespace check permits page-delimiter (^L)
+   - Indentation check prints the diff to console
+   - User can specify indent specs to tell the checker about macros
+   - Added checkdoc (available only Emacs 25 and newer)
+   - Cleared up the console output for easier reading in CI
+   - Expand Travis CI test matrix to include Emacs 25 and 26
+* Version 0.1.0 (2015)
+   - Basic linting functionality implemented
+
 Credits
 -------
 
