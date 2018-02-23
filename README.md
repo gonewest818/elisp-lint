@@ -32,6 +32,10 @@ Validators
 
 Byte-compiles the file with all warnings enabled.
 
+### check-declare ###
+
+Verifies all `declare-function` statements are legitimate.
+
 ### checkdoc ###
 
 Runs checkdoc on the file to enforce standards in documentation.
@@ -71,6 +75,7 @@ Changelog
 * Version 0.3 (MELPA)
    - Emacs 23 support is deprecated [#13]
    - Adopt CircleCI and drop Travis CI [#9] [#14]
+   - Add check-declare validator [#16]
 * Version 0.2.0 (MELPA Stable - Feb 2018)
    - Project transferred to new maintainer
    - Whitespace check permits page-delimiter (^L)
