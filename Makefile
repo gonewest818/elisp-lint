@@ -19,7 +19,8 @@ lint: .elpa
 	$(EMACS) $(BATCH) -l elisp-lint.el -f elisp-lint-files-batch \
 	                  --no-byte-compile \
 	                  --no-package-format \
-	                  --no-checkdoc $(TESTS)
+	                  --no-checkdoc \
+	                  --no-check-declare $(TESTS)
 
 test: .elpa
 	$(EMACS) $(BATCH) -f buttercup-run-discover
