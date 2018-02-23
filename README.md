@@ -5,7 +5,6 @@ Basic linting for Emacs Lisp
 
 [![MELPA Stable](https://stable.melpa.org/packages/elisp-lint-badge.svg)](https://stable.melpa.org/#/elisp-lint)
 [![MELPA](https://melpa.org/packages/elisp-lint-badge.svg)](https://melpa.org/#/elisp-lint)
-[![Build Status](https://travis-ci.org/gonewest818/elisp-lint.png?branch=master)](https://travis-ci.org/gonewest818/elisp-lint)
 [![CircleCI](https://img.shields.io/circleci/project/github/gonewest818/elisp-lint.svg)](https://circleci.com/gh/gonewest818/elisp-lint)
 [![codecov](https://codecov.io/gh/gonewest818/elisp-lint/branch/master/graph/badge.svg)](https://codecov.io/gh/gonewest818/elisp-lint)
 
@@ -70,7 +69,8 @@ Changelog
 ---------
 
 * Version 0.3 (MELPA)
-   - Emacs 23 support is deprecated
+   - Emacs 23 support is deprecated [#13]
+   - Adopt CircleCI and drop Travis CI [#9] [#14]
 * Version 0.2.0 (MELPA Stable - Feb 2018)
    - Project transferred to new maintainer
    - Whitespace check permits page-delimiter (^L)
