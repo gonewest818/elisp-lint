@@ -51,6 +51,7 @@
 ;;    - Emacs 23 support is deprecated [#13]
 ;;    - Adopt CircleCI and drop Travis CI [#9] [#14]
 ;;    - Add check-declare validator [#16]
+;;    - Generate autoloads before bytecompile [#8]
 ;; * Version 0.2 (MELPA Stable - Feb 2018)
 ;;    - Project transferred to new maintainer
 ;;    - Whitespace check permits page-delimiter (^L)
@@ -88,7 +89,7 @@
 The property 'lisp-indent-function will be set accordingly on
 each of the provided symbols prior to running the indentation
 check.  Caller can set this variable as needed on the command
-line or in `.dir-locals.el'.  The alist should take the form
+line or in \".dir-locals.el\".  The alist should take the form
 `((symbol1 . spec1) (symbol2 . spec2) ...)' where the specs are
 identical to the `indent' declarations in defmacro.")
 (put 'elisp-lint-indent-specs 'safe-local-variable 'listp)
@@ -117,11 +118,28 @@ identical to the `indent' declarations in defmacro.")
 
 ;;; Validators
 
+(defvar elisp-lint--autoloads-filename nil
+  "The autoloads file for this package.")
+
+(defun elisp-lint--generate-autoloads ()
+  "Generate autoloads and set `elisp-lint--autoloads-filename`.
+Assume `default-directory` name is also the package name,
+e.g. for this package it will be \"elisp-lint-autoloads.el\"."
+  (let* ((dir (directory-file-name default-directory))
+         (prefix (file-name-nondirectory dir))
+         (pkg (intern prefix))
+         (load-prefer-newer t))
+    (package-generate-autoloads pkg dir)
+    (setq elisp-lint--autoloads-filename (format "%s-autoloads.el" prefix))))
+
 (defun elisp-lint--byte-compile (file)
   "Byte-compile FILE with warnings enabled.
 Return nil if errors were found."
   (let ((byte-compile-error-on-warn t)
         (byte-compile-warnings t))
+    (unless elisp-lint--autoloads-filename
+      (elisp-lint--generate-autoloads))
+    (load-file elisp-lint--autoloads-filename)
     (byte-compile-file file)))
 
 (defun elisp-lint--check-declare (file)
@@ -167,7 +185,7 @@ symbols (typically macros) that require special handling."
 
 (defun elisp-lint--indent-character ()
   "Verify buffer indentation is consistent with `indent-tabs-mode`.
-Use a file variable or a .dir.locals file to override the default value."
+Use a file variable or \".dir-locals.el\" to override the default value."
   (let ((lines nil)
         (re (if indent-tabs-mode
                 (elisp-lint--not-tab-regular-expression)
@@ -193,7 +211,7 @@ Use a file variable or a .dir.locals file to override the default value."
 
 (defun elisp-lint--fill-column ()
   "Confirm buffer has no lines exceeding `fill-column` in length.
-Use a file variable or a .dir.locals file to override the default value."
+Use a file variable or \".dir-locals.el\" to override the default value."
   (save-excursion
     (let ((line-number 1)
           (too-long-lines nil))
