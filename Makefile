@@ -1,9 +1,10 @@
 export EMACS ?= emacs
 export BATCH = --batch -q -l .emacs/init.el
 
-ELS = $(wildcard *.el)
+ELS = $(filter-out elisp-lint-autoloads.el,$(wildcard *.el))
 TESTS = $(wildcard test/*.el)
 OBJECTS = $(ELS:.el=.elc)
+BACKUPS = $(ELS:.el=.el~) $(TESTS:.el=.el~)
 
 .PHONY: version lint test clean cleanelpa
 
@@ -32,8 +33,8 @@ submit-coverage: coverage.json
 	curl -s https://codecov.io/bash | bash -s - -f coverage.json
 
 clean:
-	rm -f $(OBJECTS) coverage.json
+	rm -f $(OBJECTS) $(BACKUPS) elisp-lint-autoloads.el* coverage.json
 
 cleanelpa: clean
-	rm -rf .emacs/elpa .emacs/quelpa .emacs/.emacs-custom.el .elpa
+	rm -rf .emacs/elpa .emacs/quelpa .emacs/.emacs-custom.el* .elpa
 

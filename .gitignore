@@ -1,2 +1,3 @@
 .elpa
 *.elc
+elisp-lint-autoloads.el

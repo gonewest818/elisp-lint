@@ -76,6 +76,7 @@ Changelog
    - Emacs 23 support is deprecated [#13]
    - Adopt CircleCI and drop Travis CI [#9] [#14]
    - Add check-declare validator [#16]
+   - Generate autoloads before bytecompile [#8]
 * Version 0.2.0 (MELPA Stable - Feb 2018)
    - Project transferred to new maintainer
    - Whitespace check permits page-delimiter (^L)
