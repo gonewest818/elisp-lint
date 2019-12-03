@@ -1,11 +1,11 @@
 ;;; elisp-lint.el --- basic linting for Emacs Lisp
 ;;
 ;; Copyright (C) 2013-2015 Nikolaj Schumacher
-;; Copyright (C) 2018 Neil Okamoto
+;; Copyright (C) 2018-2019 Neil Okamoto
 ;;
 ;; Author: Nikolaj Schumacher <bugs * nschum de>,
 ;; Author: Neil Okamoto <neil.okamoto+melpa@gmail.com>
-;; Version: 0.3
+;; Version: 0.3.0
 ;; Keywords: lisp, maint, tools
 ;; Package-Requires: ((emacs "24"))
 ;; URL: http://github.com/gonewest818/elisp-lint/
