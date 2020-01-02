@@ -5,7 +5,7 @@
 ;;
 ;; Author: Nikolaj Schumacher <bugs * nschum de>,
 ;; Author: Neil Okamoto <neil.okamoto+melpa@gmail.com>
-;; Version: 0.3.0
+;; Version: 0.4.0-SNAPSHOT
 ;; Keywords: lisp, maint, tools
 ;; Package-Requires: ((emacs "24"))
 ;; URL: http://github.com/gonewest818/elisp-lint/
@@ -47,12 +47,14 @@
 ;;
 ;;; Change Log:
 ;;
-;; * Version 0.3 (MELPA)
+;; * Version 0.4-SNAPSHOT (available in MELPA)
+;;    - Provide a summary report of all tests [#20]
+;; * Version 0.3 (MELPA Stable, as of December 2019)
 ;;    - Emacs 23 support is deprecated [#13]
 ;;    - Adopt CircleCI and drop Travis CI [#9] [#14]
 ;;    - Add check-declare validator [#16]
 ;;    - Generate autoloads before bytecompile [#8]
-;; * Version 0.2 (MELPA Stable - Feb 2018)
+;; * Version 0.2 (Feb 2018)
 ;;    - Project transferred to new maintainer
 ;;    - Whitespace check permits page-delimiter (^L)
 ;;    - Indentation check prints the diff to console
