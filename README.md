@@ -94,7 +94,7 @@ Credits
 The initial development of `elisp-lint` is Copyright 2013-2015 Nikolaj
 Schumacher. This project was transferred to Neil Okamoto in 2018.
 
-Updates and ongoing development are Copyright 2018 Neil Okamoto and contributors.
+Updates and ongoing development are Copyright 2018-2020 Neil Okamoto and contributors.
 
 Contributing
 ------------
