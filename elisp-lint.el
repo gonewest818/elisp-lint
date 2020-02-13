@@ -1,13 +1,13 @@
-;;; elisp-lint.el --- basic linting for Emacs Lisp
+;;; elisp-lint.el --- Basic linting for Emacs Lisp  -*- lexical-binding:t -*-
 ;;
 ;; Copyright (C) 2013-2015 Nikolaj Schumacher
-;; Copyright (C) 2018-2019 Neil Okamoto
+;; Copyright (C) 2018-2020 Neil Okamoto
 ;;
 ;; Author: Nikolaj Schumacher <bugs * nschum de>,
 ;; Author: Neil Okamoto <neil.okamoto+melpa@gmail.com>
 ;; Version: 0.4.0-SNAPSHOT
 ;; Keywords: lisp, maint, tools
-;; Package-Requires: ((emacs "24"))
+;; Package-Requires: ((emacs "24.4") (dash "2.15.0") (package-lint "0.11"))
 ;; URL: http://github.com/gonewest818/elisp-lint/
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -49,17 +49,20 @@
 ;;
 ;; * Version 0.4-SNAPSHOT (available in MELPA)
 ;;    - Provide a summary report of all tests [#20]
+;;    - Integrate `package-lint' [#19]
+;;    - Remove `package-format', as `package-lint' covers the same
+;;    - Add dependency on `dash.el'
 ;; * Version 0.3 (MELPA Stable, as of December 2019)
 ;;    - Emacs 23 support is deprecated [#13]
 ;;    - Adopt CircleCI and drop Travis CI [#9] [#14]
-;;    - Add check-declare validator [#16]
-;;    - Generate autoloads before bytecompile [#8]
+;;    - Add `check-declare' validator [#16]
+;;    - Generate autoloads before byte-compile [#8]
 ;; * Version 0.2 (Feb 2018)
 ;;    - Project transferred to new maintainer
 ;;    - Whitespace check permits page-delimiter (^L)
 ;;    - Indentation check prints the diff to console
 ;;    - User can specify indent specs to tell the checker about macros
-;;    - Added checkdoc (available only Emacs 25 and newer)
+;;    - Added `checkdoc' (available only Emacs 25 and newer)
 ;;    - Cleared up the console output for easier reading in CI
 ;;    - Expand Travis CI test matrix to include Emacs 25 and 26
 ;; * Version 0.1 (2015)
@@ -70,21 +73,29 @@
 (require 'bytecomp)
 (require 'check-declare)
 (require 'checkdoc nil t)
-(require 'package nil t)
-
-(declare-function package-buffer-info "package" t)
+(require 'package-lint)
+(require 'subr-x)
+(require 'dash)
 
 (defconst elisp-lint-file-validators
-  (nconc '("byte-compile" "check-declare")
-         (when (fboundp 'checkdoc-file) '("checkdoc"))))
+  '("byte-compile"
+    "check-declare"))
 
 (defconst elisp-lint-buffer-validators
-  '("package-format" "indent" "indent-character" "fill-column"
-    "trailing-whitespace"))
+  (append (when (fboundp 'checkdoc-current-buffer)
+            '("checkdoc"))
+          '("package-lint"
+            "indent"
+            "indent-character"
+            "fill-column"
+            "trailing-whitespace")))
 
 (defvar elisp-lint-ignored-validators nil
   "List of validators that should not be run.")
 (put 'elisp-lint-ignored-validators 'safe-local-variable 'listp)
+
+(defvar elisp-lint-batch-files nil
+  "List of files to be processed in batch execution.")
 
 (defvar elisp-lint-indent-specs nil
   "Alist of symbols and their indent specifiers.
@@ -96,6 +107,9 @@ line or in \".dir-locals.el\".  The alist should take the form
 identical to the `indent' declarations in defmacro.")
 (put 'elisp-lint-indent-specs 'safe-local-variable 'listp)
 
+(defvar elisp-lint--debug nil
+  "Toggle when debugging interactively for extra warnings, etc.")
+
 (defmacro elisp-lint--protect (&rest body)
   "Handle errors raised in BODY."
   (declare (indent 0) (debug t))
@@ -105,18 +119,20 @@ identical to the `indent' declarations in defmacro.")
 
 (defmacro elisp-lint--run (validator &rest args)
   "Run the VALIDATOR with ARGS."
-  `(or (member ,validator elisp-lint-ignored-validators)
-       (progn
-         (message "* Run %s" ,validator)
-         (elisp-lint--protect (funcall
-                               (intern (concat "elisp-lint--" ,validator))
-                               ,@args)))))
+  `(unless (member ,validator elisp-lint-ignored-validators)
+     (let ((v (elisp-lint--protect
+                (funcall (intern (concat "elisp-lint--" ,validator)) ,@args))))
+       (copy-tree v)))) ;; TODO: is deep copy necessary?
 
-(defun elisp-lint--amend-ignored-validators-from-command-line ()
-  "Parse command line and find flags to disable specific validators."
-  (while (string-match "^--no-\\([a-z-]*\\)" (car command-line-args-left))
-    (add-to-list 'elisp-lint-ignored-validators
-                 (match-string 1 (pop command-line-args-left)))))
+(defun elisp-lint--handle-argv ()
+  "Parse command line and find flags to disable specific validators.
+Push results to `elisp-lint-ignored-validators' and `elisp-lint-batch-files'."
+  (dolist (option command-line-args-left)
+    (cond ((string-match "^--no-\\([a-z-]*\\)" option)
+           (add-to-list 'elisp-lint-ignored-validators
+                        (substring-no-properties option 5)))
+          (t (add-to-list 'elisp-lint-batch-files option))))
+  (setq command-line-args-left nil))    ; empty this.  we've handled all.
 
 ;;; Validators
 
@@ -137,53 +153,155 @@ e.g. for this package it will be \"elisp-lint-autoloads.el\"."
 (defun elisp-lint--byte-compile (file)
   "Byte-compile FILE with warnings enabled.
 Return nil if errors were found."
-  (let ((byte-compile-error-on-warn t)
+  (let ((comp-log "*Compile-Log*")
+        (lines nil)
         (byte-compile-warnings t))
     (unless elisp-lint--autoloads-filename
       (elisp-lint--generate-autoloads))
     (load-file elisp-lint--autoloads-filename)
-    (byte-compile-file file)))
+    (when (get-buffer comp-log) (kill-buffer comp-log))
+    (byte-compile-file file)
+    (with-current-buffer comp-log
+      (goto-char (point-min))
+      (beginning-of-line 3)             ; skip header lines
+      (while (not (eobp))
+        (let ((item (split-string
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position))
+                     ":")))
+          (push (list (string-to-number (nth 1 item)) ; LINE
+                      (string-to-number (nth 2 item)) ; COL
+                      'byte-compile                   ; TYPE
+                      (string-trim                    ; MSG
+                       (mapconcat #'identity (cdddr item) ":")))
+                lines)
+          (beginning-of-line 2))))
+    lines))
 
 (defun elisp-lint--check-declare (file)
   "Validate `declare-function` statements in FILE."
   (let ((errlist (check-declare-file file)))
-    (or (null errlist)
-        (error "Check-declare failed"))))
+    (mapcar
+     (lambda (item)
+       ;; check-declare-file returns a list of items containing, from
+       ;; left to right, the name of the library where `declare-function'
+       ;; said to find the definition, followed by a list of the filename
+       ;; we are currently linting, the function name being looked up,
+       ;; and the error returned by `check-declare-file':
+       ;;
+       ;; ((".../path/to/library1.el.gz" ("foo.el" "func1" "err message"))
+       ;;  (".../path/to/library2.el.gz" ("foo.el" "func2" "err message"))
+       ;;  ...
+       ;;  (".../path/to/libraryN.el.gz" ("foo.el" "funcN" "err message")))
+       ;;
+       ;; For now we don't get line numbers for warnings, but the
+       ;; `declare-function' lines are easy for the user to find.
+       (list 0 0 'check-declare
+             (format "(declare-function) %s: \"%s\" in file \"%s\""
+                     (car (cddadr item))
+                     (cadadr item)
+                     (car item))))
+     errlist)))
 
 ;; Checkdoc is available only Emacs 25 or newer
-(when (fboundp 'checkdoc-file)
-  (defun elisp-lint--checkdoc (file)
-    "Run checkdoc on FILE and print the results.
-Return nil if errors were found, else t."
-    (let* ((msgbuf (get-buffer "*Messages*"))
-           (tick (buffer-modified-tick msgbuf)))
-      (checkdoc-file file)
-      (or (equal tick (buffer-modified-tick msgbuf))
-          (error "Checkdoc failed")))))
+(when (fboundp 'checkdoc-current-buffer)
+  (defun elisp-lint--checkdoc ()
+    "Run checkdoc on the current buffer.
+Parse warnings and return in a list, or nil if no errors found."
+    (let ((style-buf "*Style Warnings*")
+          (lines nil))
+      (when (get-buffer style-buf) (kill-buffer style-buf))
+      (checkdoc-current-buffer t)
+      (with-current-buffer style-buf
+        (goto-char (point-min))
+        (beginning-of-line 5) ; skip empty lines and ^L
+        (while (not (eobp))
+          (let ((item (split-string
+                       (buffer-substring-no-properties
+                        (line-beginning-position) (line-end-position))
+                       ":")))
+            (push (list (string-to-number (nth 1 item))           ; LINE
+                        0                                         ; COLUMN
+                        'checkdoc                                 ; TYPE
+                        (string-trim
+                         (mapconcat #'identity (cddr item) ":"))) ; MSG
+                  lines)
+            (beginning-of-line 2))))
+      lines)))
 
-(defun elisp-lint--package-format ()
-  "Call `package-buffer-info' to validate package metadata."
-  (or (null (require 'package nil t))
-      (package-buffer-info)))
+(defun elisp-lint--package-lint ()
+  "Run package-lint on buffer and return results.
+Result is a list of one item per line having an error, and each
+entry contains: (LINE COLUMN TYPE MESSAGE)"
+  (package-lint-buffer))
+
+(defun elisp-lint--next-diff ()
+  "Search via regexp for the next diff in the current buffer.
+We expect this buffer to contain the output of \"diff -C 0\" and
+that the point is advancing through the buffer as it is parsed.
+Here we know each diff entry will be formatted like this if the
+indentation problem occurs in an isolated line:
+
+    ***************
+    *** 195 ****
+    !        (let ((tick (buffer-modified-tick)))
+    --- 195 ----
+    !   (let ((tick (buffer-modified-tick)))
+
+or formatted like this if there is a series of lines:
+
+    ***************
+    *** 195,196 ****
+    !        (let ((tick (buffer-modified-tick)))
+    !  (indent-region (point-min) (point-max))
+    --- 195,196 ----
+    !   (let ((tick (buffer-modified-tick)))
+    !     (indent-region (point-min) (point-max))
+
+So we will search for the asterisks and line numbers.  Return a
+list containing the range of line numbers for this next
+diff.  Return nil if no more diffs found in the buffer."
+  (when (re-search-forward
+         "^\\*\\*\\* \\([0-9]+\\),*\\([0-9]*\\) \\*\\*\\*\\*$" nil t)
+    (let* ((r1 (string-to-number (match-string-no-properties 1)))
+           (r2 (match-string-no-properties 2))
+           (r2 (if (equal r2 "") r1 (string-to-number r2))))
+      (beginning-of-line 2)   ; leave point at start of next line
+      (number-sequence r1 r2))))
 
 (defun elisp-lint--indent ()
   "Confirm buffer indentation is consistent with `emacs-lisp-mode'.
 Use `indent-region' to format the entire buffer, and compare the
-results to the filesystem.  Print diffs if there are any
-discrepancies.  Prior to indenting the buffer, apply the settings
-provided in `elisp-lint-indent-specs' to configure specific
-symbols (typically macros) that require special handling."
+results to the filesystem.  Return a list of diffs if there are
+any discrepancies.  Prior to indenting the buffer, apply the
+settings provided in `elisp-lint-indent-specs' to configure
+specific symbols (typically macros) that require special
+handling.  Result is a list of one item per line having an error,
+and each entry contains: (LINE COLUMN TYPE MESSAGE)"
   (dolist (s elisp-lint-indent-specs)
     (put (car s) 'lisp-indent-function (cdr s)))
-  (let ((tick (buffer-modified-tick)))
+  (let ((tick (buffer-modified-tick))
+        (errlist nil))
     (indent-region (point-min) (point-max))
-    (or (equal tick (buffer-modified-tick))
-        (progn
-          (diff-buffer-with-file)
-          (with-current-buffer "*Diff*"
-            (message "%s" (buffer-string))
-            (kill-buffer))
-          (error "Indentation is incorrect")))))
+    (unless (equal tick (buffer-modified-tick))
+      (let ((diff-switches "-C 0")) (diff-buffer-with-file))
+      (revert-buffer t t)               ; revert indent changes
+      (with-current-buffer "*Diff*"
+        (goto-char (point-min))
+        (while (not (eobp))
+          (let ((line-range (elisp-lint--next-diff)))
+            (if line-range
+                (mapc (lambda (linenum) ; loop over the range and report
+                        (push (list linenum 0 'indent
+                                    (buffer-substring-no-properties
+                                     (line-beginning-position)
+                                     (line-end-position))) errlist)
+                        (beginning-of-line 2)) ; next line
+                      line-range)
+              (goto-char (point-max)))))
+        (kill-buffer)))
+    errlist))
 
 (defun elisp-lint--indent-character ()
   "Verify buffer indentation is consistent with `indent-tabs-mode`.
@@ -198,18 +316,13 @@ Use a file variable or \".dir-locals.el\" to override the default value."
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward re nil t)
-        (push (count-lines (point-min) (point)) lines)))
-    (or (null lines)
-        (error "Lines indented with %s: %s" msg
-               (elisp-lint--join-lines lines)))))
+        (push (list (count-lines (point-min) (point))
+                    0 'indent-character msg) lines)))
+    lines))
 
 (defun elisp-lint--not-tab-regular-expression ()
   "Regex to match a string of spaces with a length of `tab-width`."
   (concat "^" (make-string tab-width ? )))
-
-(defun elisp-lint--join-lines (line-numbers)
-  "Convert LINE-NUMBERS list into a comma delimited string."
-  (mapconcat (lambda (i) (format "#%d" i)) (sort line-numbers '<) ", "))
 
 (defun elisp-lint--fill-column ()
   "Confirm buffer has no lines exceeding `fill-column` in length.
@@ -221,12 +334,12 @@ Use a file variable or \".dir-locals.el\" to override the default value."
       (while (not (eobp))
         (goto-char (point-at-eol))
         (when (> (current-column) fill-column)
-          (push line-number too-long-lines))
+          (push (list line-number 0 'fill-column
+                      (format "line length %s exceeded" fill-column))
+                too-long-lines))
         (setq line-number (1+ line-number))
         (forward-line 1))
-      (or (null too-long-lines)
-          (error "Lines longer than %d characters: %s"
-                 fill-column (elisp-lint--join-lines too-long-lines))))))
+      too-long-lines)))
 
 (defun elisp-lint--trailing-whitespace ()
   "Confirm buffer has no line with trailing whitespace.
@@ -239,10 +352,10 @@ Allow `page-delimiter` if it is alone on a line."
                  (concat page-delimiter "$") ; allow a solo page-delimiter
                  (buffer-substring-no-properties (line-beginning-position)
                                                  (line-end-position)))
-          (push (count-lines (point-min) (point)) lines)))
-      (or (null lines)
-          (error "Line numbers with trailing whitespace: %s"
-                 (elisp-lint--join-lines (sort lines '<)))))))
+          (push (list (count-lines (point-min) (point)) 0
+                      'whitespace "trailing whitespace found")
+                lines)))
+      lines)))
 
 ;;; Linting
 
@@ -250,31 +363,48 @@ Allow `page-delimiter` if it is alone on a line."
   "Run validators on FILE."
   (with-temp-buffer
     (find-file file)
-    (when elisp-lint-ignored-validators
-      (message "** Ignoring validators: %s"
-               (mapconcat 'identity elisp-lint-ignored-validators ", ")))
-    (let ((success t))
-      (mapc (lambda (validator)
-              (setq success (and (elisp-lint--run validator file) success)))
-            elisp-lint-file-validators)
-      (mapc (lambda (validator)
-              (setq success (and (elisp-lint--run validator) success)))
-            elisp-lint-buffer-validators)
-      success)))
+    (let ((warnings (-concat (-mapcat (lambda (validator)
+                                        (elisp-lint--run validator file))
+                                      elisp-lint-file-validators)
+                             (-mapcat (lambda (validator)
+                                        (elisp-lint--run validator))
+                                      elisp-lint-buffer-validators))))
+      (mapc (lambda (w)
+              (princ
+               (format "%-32s %s\n"
+                       (format "%s:%d:%d (%s)"
+                               file (nth 0 w) (nth 1 w) (nth 2 w))
+                       (nth 3 w))))
+            (sort warnings (lambda (x y) (< (car x) (car y)))))
+      (not warnings))))
 
 (defun elisp-lint-files-batch ()
   "Run validators on all files specified on the command line."
-  (elisp-lint--amend-ignored-validators-from-command-line)
+  (elisp-lint--handle-argv)
+  (when elisp-lint--debug
+    (print "files:") (pp elisp-lint-batch-files)
+    (print "ignored:") (pp elisp-lint-ignored-validators)
+    (print "file validators:") (pp elisp-lint-file-validators)
+    (print "buffer validators:") (pp elisp-lint-buffer-validators))
   (let ((success t))
-    (while command-line-args-left
-      (message "%s" (make-string 75 ?\*))
-      (message "** ELISP-LINT: check %s..." (car command-line-args-left))
-      (if (elisp-lint-file (car command-line-args-left))
-          (message "** ELISP-LINT: %s OK" (car command-line-args-left))
-        (message "** ELISP:LINT: %s FAIL" (car command-line-args-left))
-        (setq success nil))
-      (pop command-line-args-left))
-    (kill-emacs (if success 0 1))))
+    (dolist (file elisp-lint-batch-files)
+      (if (elisp-lint-file file)
+          (princ (concat file " OK\n"))
+        (princ (concat file " FAIL\n"))
+        (setq success nil)))
+    (unless elisp-lint--debug (kill-emacs (if success 0 1)))))
+
+;; ELISP>
+;; (let ((command-line-args-left '("--no-byte-compile"
+;;                                 "--no-package-format"
+;;                                 "--no-checkdoc"
+;;                                 "--no-check-declare"
+;;                                 "example.el")))
+;;   (setq elisp-lint-ignored-validators nil
+;;         elisp-lint-file-validators nil
+;;         elisp-lint-buffer-validators nil
+;;         elisp-lint-batch-files nil)
+;;   (elisp-lint-files-batch))
 
 (provide 'elisp-lint)
 
