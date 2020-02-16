@@ -55,9 +55,9 @@ to specify each symbol's required indent.
 Verifies the indentation is consistently tabs or spaces, according to the value
 of `indent-tabs-mode`.
 
-### package-format ###
+### package-lint ###
 
-Calls `package-buffer-info` to validate some file metadata.
+Use `package-lint` to perform checks on package metadata and elisp style.
 
 ### trailing-whitespace ###
 
@@ -72,12 +72,17 @@ above.
 Changelog
 ---------
 
-* Version 0.3 (MELPA)
+* Version 0.4-SNAPSHOT (available on MELPA)
+   - Provide a summary report of all tests [#20]
+   - Integrate package-lint [#19]
+   - Remove package-format, as package-lint covers the same territory
+   - Add dependency on dash.el
+* Version 0.3 (MELPA Stable)
    - Emacs 23 support is deprecated [#13]
    - Adopt CircleCI and drop Travis CI [#9] [#14]
    - Add check-declare validator [#16]
    - Generate autoloads before bytecompile [#8]
-* Version 0.2.0 (MELPA Stable - Feb 2018)
+* Version 0.2.0 (Feb 2018)
    - Project transferred to new maintainer
    - Whitespace check permits page-delimiter (^L)
    - Indentation check prints the diff to console
