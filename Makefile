@@ -9,6 +9,12 @@ BACKUPS = $(ELS:.el=.el~) $(TESTS:.el=.el~)
 .PHONY: version lint test clean cleanelpa
 
 .elpa:
+	mkdir -p .emacs/elpa/gnupg && \
+	chmod 700 .emacs/elpa/gnupg && \
+	echo "disable-ipv6" > .emacs/elpa/gnupg/dirmngr.conf && \
+	gpg --keyserver pool.sks-keyservers.net \
+	    --homedir .emacs/elpa/gnupg \
+	    --recv-keys 066DAFCB81E42C40
 	$(EMACS) $(BATCH)
 	touch .elpa
 
