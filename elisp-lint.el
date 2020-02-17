@@ -52,6 +52,7 @@
 ;;    - Integrate `package-lint' [#19]
 ;;    - Remove `package-format', as `package-lint' covers the same
 ;;    - Add dependency on `dash.el'
+;;    - Colorized output
 ;; * Version 0.3 (MELPA Stable, as of December 2019)
 ;;    - Emacs 23 support is deprecated [#13]
 ;;    - Adopt CircleCI and drop Travis CI [#9] [#14]
@@ -357,6 +358,30 @@ Allow `page-delimiter` if it is alone on a line."
                 lines)))
       lines)))
 
+;;; Colorized output
+
+;; Derived from similar functionality in buttercup.el
+;; whose implementation is also licensed under the GPL:
+;; https://github.com/jorgenschaefer/emacs-buttercup/
+
+(defconst elisp-lint--ansi-colors
+  '((black   . 30)
+    (red     . 31)
+    (green   . 32)
+    (yellow  . 33)
+    (blue    . 34)
+    (magenta . 35)
+    (cyan    . 36)
+    (white   . 37))
+  "ANSI color escape codes.")
+
+(defun elisp-lint--print (color fmt &rest args)
+  "Print output text in COLOR, formatted according to FMT and ARGS."
+  (let ((ansi-val (cdr (assoc color elisp-lint--ansi-colors)))
+        (cfmt (concat "\u001b[%sm" fmt  "\u001b[0m")))
+    (princ (apply #'format cfmt ansi-val args))
+    (terpri)))
+
 ;;; Linting
 
 (defun elisp-lint-file (file)
@@ -370,11 +395,12 @@ Allow `page-delimiter` if it is alone on a line."
                                         (elisp-lint--run validator))
                                       elisp-lint-buffer-validators))))
       (mapc (lambda (w)
-              (princ
-               (format "%-32s %s\n"
-                       (format "%s:%d:%d (%s)"
-                               file (nth 0 w) (nth 1 w) (nth 2 w))
-                       (nth 3 w))))
+              ;; TODO: with two passes we could exactly calculate the number of
+              ;; spaces to indent after the filenames and line numbers.
+              (elisp-lint--print 'cyan "%-32s %s"
+                                 (format "%s:%d:%d (%s)"
+                                         file (nth 0 w) (nth 1 w) (nth 2 w))
+                                 (nth 3 w)))
             (sort warnings (lambda (x y) (< (car x) (car y)))))
       (not warnings))))
 
@@ -382,15 +408,19 @@ Allow `page-delimiter` if it is alone on a line."
   "Run validators on all files specified on the command line."
   (elisp-lint--handle-argv)
   (when elisp-lint--debug
-    (print "files:") (pp elisp-lint-batch-files)
-    (print "ignored:") (pp elisp-lint-ignored-validators)
-    (print "file validators:") (pp elisp-lint-file-validators)
-    (print "buffer validators:") (pp elisp-lint-buffer-validators))
+    (elisp-lint--print 'cyan "files: %s"
+                       elisp-lint-batch-files)
+    (elisp-lint--print 'cyan "ignored: %s"
+                       elisp-lint-ignored-validators)
+    (elisp-lint--print 'cyan "file validators: %s"
+                       elisp-lint-file-validators)
+    (elisp-lint--print 'cyan "buffer validators: %s"
+                       elisp-lint-buffer-validators))
   (let ((success t))
     (dolist (file elisp-lint-batch-files)
       (if (elisp-lint-file file)
-          (princ (concat file " OK\n"))
-        (princ (concat file " FAIL\n"))
+          (elisp-lint--print 'green "%s OK" file)
+        (elisp-lint--print 'red "%s FAIL" file)
         (setq success nil)))
     (unless elisp-lint--debug (kill-emacs (if success 0 1)))))
 
