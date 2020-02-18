@@ -12,9 +12,12 @@ BACKUPS = $(ELS:.el=.el~) $(TESTS:.el=.el~)
 	mkdir -p .emacs/elpa/gnupg && \
 	chmod 700 .emacs/elpa/gnupg && \
 	echo "disable-ipv6" > .emacs/elpa/gnupg/dirmngr.conf && \
-	gpg --keyserver pool.sks-keyservers.net \
+	for i in {1..3}; do \
+	gpg --keyserver keyserver.ubuntu.com \
 	    --homedir .emacs/elpa/gnupg \
-	    --recv-keys 066DAFCB81E42C40
+	    --recv-keys 066DAFCB81E42C40 \
+	    && break || sleep 15; \
+        done
 	$(EMACS) $(BATCH)
 	touch .elpa
 
