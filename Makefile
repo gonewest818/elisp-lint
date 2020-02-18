@@ -17,7 +17,7 @@ BACKUPS = $(ELS:.el=.el~) $(TESTS:.el=.el~)
 	    --homedir .emacs/elpa/gnupg \
 	    --recv-keys 066DAFCB81E42C40 \
 	    && break || sleep 15; \
-        done
+	done
 	$(EMACS) $(BATCH)
 	touch .elpa
 
