@@ -69,6 +69,34 @@ Configuration
 Use a file variable or `.dir-locals.el` to override the variables mentioned
 above.
 
+Sample Report
+-------------
+
+``` text
+test/data/example.el:0:0 (checkdoc) You should have a section marked ";;; Commentary:"
+test/data/example.el:0:0 (checkdoc) The first line should be of the form: ";;; package --- Summary"
+test/data/example.el:1:0 (error) Package should have a ;;; Commentary section.
+test/data/example.el:1:0 (error) Package should have a Homepage or URL header.
+test/data/example.el:1:0 (error) package.el cannot parse this buffer: Package lacks a file header
+test/data/example.el:5:0 (checkdoc) You should have a section marked ";;; Code:"
+test/data/example.el:8:0 (checkdoc) White space found at end of line
+test/data/example.el:8:0 (whitespace) trailing whitespace found
+test/data/example.el:9:0 (indent) !      (b y))
+test/data/example.el:10:0 (indent) ! 	  (message "%s" a))  
+test/data/example.el:10:0 (indent-character) tabs instead of spaces
+test/data/example.el:10:0 (whitespace) trailing whitespace found
+test/data/example.el:11:0 (fill-column) line length 80 exceeded
+test/data/example.el:12:0 (indent) !   (setq a 3)
+test/data/example.el:16:0 (error) "foo" doesn't start with package's prefix "difftest".
+test/data/example.el:17:0 (checkdoc) First line should be capitalized
+test/data/example.el:17:0 (checkdoc) First sentence should end with punctuation
+test/data/example.el:17:0 (indent) ! "emacs is fun"
+test/data/example.el:18:0 (warning) Closing parens should not be wrapped onto new lines.
+test/data/example.el:18:0 (indent) ! )
+test/data/example.el:21:0 (checkdoc) The footer should be: (provide 'example)\n;;; example.el ends here
+test/data/example.el FAIL
+```
+
 Changelog
 ---------
 
