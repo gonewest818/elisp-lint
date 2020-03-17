@@ -42,28 +42,28 @@
 ;;
 ;; ((emacs-lisp-mode . ((elisp-lint-ignored-validators . ("fill-column")))))
 ;;
-;; For a full list of validators, see `elisp-lint-file-validators' and
-;; `elisp-lint-buffer-validators'.
+;; For a full list of validators, see 'elisp-lint-file-validators' and
+;; 'elisp-lint-buffer-validators'.
 ;;
 ;;; Change Log:
 ;;
 ;; * Version 0.4-SNAPSHOT (available in MELPA)
 ;;    - Provide a summary report of all tests [#20]
-;;    - Integrate `package-lint' [#19]
-;;    - Remove `package-format', as `package-lint' covers the same
-;;    - Add dependency on `dash.el'
+;;    - Integrate 'package-lint' [#19]
+;;    - Remove 'package-format', as 'package-lint' covers the same
+;;    - Add dependency on 'dash.el'
 ;;    - Colorized output
 ;; * Version 0.3 (MELPA Stable, as of December 2019)
 ;;    - Emacs 23 support is deprecated [#13]
 ;;    - Adopt CircleCI and drop Travis CI [#9] [#14]
-;;    - Add `check-declare' validator [#16]
+;;    - Add 'check-declare' validator [#16]
 ;;    - Generate autoloads before byte-compile [#8]
 ;; * Version 0.2 (Feb 2018)
 ;;    - Project transferred to new maintainer
 ;;    - Whitespace check permits page-delimiter (^L)
 ;;    - Indentation check prints the diff to console
 ;;    - User can specify indent specs to tell the checker about macros
-;;    - Added `checkdoc' (available only Emacs 25 and newer)
+;;    - Added 'checkdoc' (available only Emacs 25 and newer)
 ;;    - Cleared up the console output for easier reading in CI
 ;;    - Expand Travis CI test matrix to include Emacs 25 and 26
 ;; * Version 0.1 (2015)
@@ -141,8 +141,8 @@ Push results to `elisp-lint-ignored-validators' and `elisp-lint-batch-files'."
   "The autoloads file for this package.")
 
 (defun elisp-lint--generate-autoloads ()
-  "Generate autoloads and set `elisp-lint--autoloads-filename`.
-Assume `default-directory` name is also the package name,
+  "Generate autoloads and set `elisp-lint--autoloads-filename'.
+Assume `default-directory' name is also the package name,
 e.g. for this package it will be \"elisp-lint-autoloads.el\"."
   (let* ((dir (directory-file-name default-directory))
          (prefix (file-name-nondirectory dir))
@@ -181,15 +181,15 @@ Return nil if errors were found."
     lines))
 
 (defun elisp-lint--check-declare (file)
-  "Validate `declare-function` statements in FILE."
+  "Validate `declare-function' statements in FILE."
   (let ((errlist (check-declare-file file)))
     (mapcar
      (lambda (item)
        ;; check-declare-file returns a list of items containing, from
-       ;; left to right, the name of the library where `declare-function'
+       ;; left to right, the name of the library where 'declare-function'
        ;; said to find the definition, followed by a list of the filename
        ;; we are currently linting, the function name being looked up,
-       ;; and the error returned by `check-declare-file':
+       ;; and the error returned by 'check-declare-file':
        ;;
        ;; ((".../path/to/library1.el.gz" ("foo.el" "func1" "err message"))
        ;;  (".../path/to/library2.el.gz" ("foo.el" "func2" "err message"))
@@ -197,7 +197,7 @@ Return nil if errors were found."
        ;;  (".../path/to/libraryN.el.gz" ("foo.el" "funcN" "err message")))
        ;;
        ;; For now we don't get line numbers for warnings, but the
-       ;; `declare-function' lines are easy for the user to find.
+       ;; 'declare-function' lines are easy for the user to find.
        (list 0 0 'check-declare
              (format "(declare-function) %s: \"%s\" in file \"%s\""
                      (car (cddadr item))
@@ -305,7 +305,7 @@ and each entry contains: (LINE COLUMN TYPE MESSAGE)"
     errlist))
 
 (defun elisp-lint--indent-character ()
-  "Verify buffer indentation is consistent with `indent-tabs-mode`.
+  "Verify buffer indentation is consistent with `indent-tabs-mode'.
 Use a file variable or \".dir-locals.el\" to override the default value."
   (let ((lines nil)
         (re (if indent-tabs-mode
@@ -322,11 +322,11 @@ Use a file variable or \".dir-locals.el\" to override the default value."
     lines))
 
 (defun elisp-lint--not-tab-regular-expression ()
-  "Regex to match a string of spaces with a length of `tab-width`."
+  "Regex to match a string of spaces with a length of `tab-width'."
   (concat "^" (make-string tab-width ? )))
 
 (defun elisp-lint--fill-column ()
-  "Confirm buffer has no lines exceeding `fill-column` in length.
+  "Confirm buffer has no lines exceeding `fill-column' in length.
 Use a file variable or \".dir-locals.el\" to override the default value."
   (save-excursion
     (let ((line-number 1)
@@ -344,7 +344,7 @@ Use a file variable or \".dir-locals.el\" to override the default value."
 
 (defun elisp-lint--trailing-whitespace ()
   "Confirm buffer has no line with trailing whitespace.
-Allow `page-delimiter` if it is alone on a line."
+Allow `page-delimiter' if it is alone on a line."
   (save-excursion
     (let ((lines nil))
       (goto-char (point-min))
