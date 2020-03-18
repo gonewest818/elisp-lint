@@ -239,7 +239,13 @@ Parse warnings and return in a list, or nil if no errors found."
   "Run package-lint on buffer and return results.
 Result is a list of one item per line having an error, and each
 entry contains: (LINE COLUMN TYPE MESSAGE)"
-  (package-lint-buffer))
+  (-map
+   (lambda (item)
+     (-update-at 2 (lambda (s)
+                     (make-symbol (concat "package-lint-"
+                                          (symbol-name s))))
+                 item))
+   (package-lint-buffer)))
 
 (defun elisp-lint--next-diff ()
   "Search via regexp for the next diff in the current buffer.
