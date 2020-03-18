@@ -104,6 +104,7 @@ Changelog
    - Provide a summary report of all tests [#20]
    - Integrate package-lint [#19]
    - Remove package-format, as package-lint covers the same territory
+   - Made byte-compile errors and warnings more robust
    - Add dependency on dash.el
 * Version 0.3 (MELPA Stable)
    - Emacs 23 support is deprecated [#13]

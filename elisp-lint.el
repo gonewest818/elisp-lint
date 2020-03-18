@@ -151,33 +151,37 @@ e.g. for this package it will be \"elisp-lint-autoloads.el\"."
     (package-generate-autoloads pkg dir)
     (setq elisp-lint--autoloads-filename (format "%s-autoloads.el" prefix))))
 
-(defun elisp-lint--byte-compile (file)
-  "Byte-compile FILE with warnings enabled.
-Return nil if errors were found."
+(defun elisp-lint--byte-compile (path-to-file)
+  "Byte-compile PATH-TO-FILE with warnings enabled.
+Return a list of errors, or nil if none found."
   (let ((comp-log "*Compile-Log*")
         (lines nil)
-        (byte-compile-warnings t))
+        (byte-compile-warnings t)
+        (file (file-name-nondirectory path-to-file)))
     (unless elisp-lint--autoloads-filename
       (elisp-lint--generate-autoloads))
     (load-file elisp-lint--autoloads-filename)
     (when (get-buffer comp-log) (kill-buffer comp-log))
-    (byte-compile-file file)
+    (byte-compile-file path-to-file)
     (with-current-buffer comp-log
       (goto-char (point-min))
-      (beginning-of-line 3)             ; skip header lines
       (while (not (eobp))
-        (let ((item (split-string
-                     (buffer-substring-no-properties
-                      (line-beginning-position)
-                      (line-end-position))
-                     ":")))
-          (push (list (string-to-number (nth 1 item)) ; LINE
-                      (string-to-number (nth 2 item)) ; COL
-                      'byte-compile                   ; TYPE
-                      (string-trim                    ; MSG
-                       (mapconcat #'identity (cdddr item) ":")))
-                lines)
-          (beginning-of-line 2))))
+        (if (looking-at file)
+            (let* ((end-pos (save-excursion ; continuation on next line?
+                              (beginning-of-line 2)
+                              (if (looking-at "    ") 2 1)))
+                   (item (split-string
+                          (buffer-substring-no-properties
+                           (line-beginning-position)
+                           (line-end-position end-pos))
+                          ":")))
+              (push (list (string-to-number (nth 1 item)) ; LINE
+                          (string-to-number (nth 2 item)) ; COL
+                          'byte-compile                   ; TYPE
+                          (string-trim                    ; MSG
+                           (mapconcat #'identity (cdddr item) ":")))
+                    lines)))
+        (beginning-of-line 2)))
     lines))
 
 (defun elisp-lint--check-declare (file)
