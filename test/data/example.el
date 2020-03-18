@@ -17,5 +17,9 @@
 "emacs is fun"
 )
 
+(auth-source-pick-first-password :user "foo" :host "bar")
+
+(not-a-function 'boo)
+
 (provide 'difftest)
 ;;; difftest ends here
