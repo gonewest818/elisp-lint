@@ -50,7 +50,9 @@
 ;; * Version 0.4-SNAPSHOT (available in MELPA)
 ;;    - Provide a summary report of all tests [#20]
 ;;    - Integrate 'package-lint' [#19]
-;;    - Remove 'package-format', as 'package-lint' covers the same
+;;    - Remove 'package-format', as 'package-lint' covers the same territory
+;;    - Make byte-compile errors and warnings more robust
+;;    - Make 'fill-column' checker ignore the package summary line [#25]
 ;;    - Add dependency on 'dash.el'
 ;;    - Colorized output
 ;; * Version 0.3 (MELPA Stable, as of December 2019)
@@ -335,13 +337,32 @@ Use a file variable or \".dir-locals.el\" to override the default value."
   "Regex to match a string of spaces with a length of `tab-width'."
   (concat "^" (make-string tab-width ? )))
 
+(defvar elisp-lint--package-summary-regexp
+  "^;;; \\([^ ]*\\)\\.el ---[ \t]*\\(.*?\\)[ \t]*\\(-\\*-.*-\\*-[ \t]*\\)?$"
+  "This regexp must match the definition in package.el.")
+
 (defun elisp-lint--fill-column ()
   "Confirm buffer has no lines exceeding `fill-column' in length.
-Use a file variable or \".dir-locals.el\" to override the default value."
+
+Use a file variable or \".dir-locals.el\" to override the default
+value.
+
+When the first line in the buffer is a valid package summary
+line, skip over that line and don't enforce the line length at
+all.  This enables that first line to include a 60 character
+summary and \"-*- lexical-binding:t -*-\" regardless if the
+resulting line length exceeds `fill-column'."
   (save-excursion
     (let ((line-number 1)
           (too-long-lines nil))
       (goto-char (point-min))
+      (if (re-search-forward elisp-lint--package-summary-regexp nil t)
+          ;; Skip package summary and don't enforce fill-column.
+          (progn
+            (forward-line 1)
+            (setq line-number (line-number-at-pos)))
+        ;; if no package summary then fill-column still applies
+        (goto-char (point-min)))
       (while (not (eobp))
         (goto-char (point-at-eol))
         (when (> (current-column) fill-column)

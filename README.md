@@ -43,6 +43,10 @@ Runs checkdoc on the file to enforce standards in documentation.
 ### fill-column ###
 
 Verifies that no line exceeds the number of columns in `fill-column`.
+However, if the first line in the file is a package summary, that line
+can be arbitrarily long. This allows just the initial line to contain
+descriptive information, plus optionally set lexical-binding, without
+forcing the author to increase `fill-column` to accommodate that line.
 
 ### indent ###
 
@@ -104,8 +108,10 @@ Changelog
    - Provide a summary report of all tests [#20]
    - Integrate package-lint [#19]
    - Remove package-format, as package-lint covers the same territory
-   - Made byte-compile errors and warnings more robust
+   - Make byte-compile errors and warnings more robust
+   - Make the fill-column checker ignore the package summary line [#25]
    - Add dependency on dash.el
+   - Colorized output
 * Version 0.3 (MELPA Stable)
    - Emacs 23 support is deprecated [#13]
    - Adopt CircleCI and drop Travis CI [#9] [#14]
