@@ -4,7 +4,7 @@
 ;; Copyright (C) 2018-2020 Neil Okamoto
 ;;
 ;; Author: Nikolaj Schumacher <bugs * nschum de>,
-;; Author: Neil Okamoto <neil.okamoto+melpa@gmail.com>
+;; Maintainer: Neil Okamoto <neil.okamoto+melpa@gmail.com>
 ;; Version: 0.4.0-SNAPSHOT
 ;; Keywords: lisp, maint, tools
 ;; Package-Requires: ((emacs "24.4") (dash "2.15.0") (package-lint "0.11"))
