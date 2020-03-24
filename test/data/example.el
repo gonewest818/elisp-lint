@@ -1,4 +1,4 @@
-;; d.el - abc
+;;; d.el --- Vestibulum convallis lorem a tempus semper dui euismod elit -*- lexical-binding:t -*-
 
 ;; Version: 1
 
@@ -12,6 +12,8 @@
   (setq a 3)
 
 ;; this is a comment. single space emacs.
+
+;; Package-Requires: ((a "123") (b "345") (a "123") (b "345") (a "123") (b "345") (a "123") (b "345"))
 
 (defun foo ()
 "emacs is fun"

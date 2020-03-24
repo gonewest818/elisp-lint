@@ -53,6 +53,7 @@
 ;;    - Remove 'package-format', as 'package-lint' covers the same territory
 ;;    - Make byte-compile errors and warnings more robust
 ;;    - Make 'fill-column' checker ignore the package summary line [#25]
+;;    - Make 'fill-column' checker ignore the package requires header
 ;;    - Add dependency on 'dash.el'
 ;;    - Colorized output
 ;; * Version 0.3 (MELPA Stable, as of December 2019)
@@ -341,34 +342,40 @@ Use a file variable or \".dir-locals.el\" to override the default value."
   "^;;; \\([^ ]*\\)\\.el ---[ \t]*\\(.*?\\)[ \t]*\\(-\\*-.*-\\*-[ \t]*\\)?$"
   "This regexp must match the definition in package.el.")
 
+(defvar elisp-lint--package-requires-regexp
+  "^;;[ \t]+Package-Requires:"
+  "This regexp must match the definition in package.el.")
+
 (defun elisp-lint--fill-column ()
   "Confirm buffer has no lines exceeding `fill-column' in length.
-
 Use a file variable or \".dir-locals.el\" to override the default
 value.
 
-When the first line in the buffer is a valid package summary
-line, skip over that line and don't enforce the line length at
-all.  This enables that first line to include a 60 character
-summary and \"-*- lexical-binding:t -*-\" regardless if the
-resulting line length exceeds `fill-column'."
+Certain lines in the file are excluded from this check, and can
+have unlimited length:
+
+* The package summary comment line, which by definition must
+  include the package name, a summary description (up to 60
+  characters), and an optional \"-*- lexical-binding:t -*-\"
+  declaration.
+
+* The \"Package-Requires\" header, whose length is determined by
+  the number of dependencies specified."
   (save-excursion
     (let ((line-number 1)
           (too-long-lines nil))
       (goto-char (point-min))
-      (if (re-search-forward elisp-lint--package-summary-regexp nil t)
-          ;; Skip package summary and don't enforce fill-column.
-          (progn
-            (forward-line 1)
-            (setq line-number (line-number-at-pos)))
-        ;; if no package summary then fill-column still applies
-        (goto-char (point-min)))
       (while (not (eobp))
-        (goto-char (point-at-eol))
-        (when (> (current-column) fill-column)
-          (push (list line-number 0 'fill-column
-                      (format "line length %s exceeded" fill-column))
-                too-long-lines))
+        (let ((text (buffer-substring-no-properties
+                     (line-beginning-position)
+                     (line-end-position))))
+          (when
+              (and (not (string-match elisp-lint--package-summary-regexp text))
+                   (not (string-match elisp-lint--package-requires-regexp text))
+                   (> (length text) fill-column))
+            (push (list line-number 0 'fill-column
+                        (format "line length %s exceeded" fill-column))
+                  too-long-lines)))
         (setq line-number (1+ line-number))
         (forward-line 1))
       too-long-lines)))

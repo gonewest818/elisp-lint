@@ -43,11 +43,17 @@ Runs checkdoc on the file to enforce standards in documentation.
 ### fill-column ###
 
 Verifies that no line exceeds the number of columns in `fill-column`.
-However, if the first line in the file is a package summary, that line
-can be arbitrarily long. This allows just the initial line to contain
-descriptive information, plus optionally set lexical-binding, without
-forcing the author to increase `fill-column` to accommodate that line.
+Certain lines in the file are excluded from this check, and can
+have unlimited length:
 
+* The package summary comment line, which by definition must
+  include the package name, a summary description (up to 60
+  characters), and an optional \"-*- lexical-binding:t -*-\"
+  declaration.
+
+* The \"Package-Requires\" header, whose length is determined by
+  the number of dependencies specified."
+ 
 ### indent ###
 
 Verifies that each line is indented according to `emacs-lisp-mode`. Where macros
