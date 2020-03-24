@@ -5,7 +5,7 @@
 ;;
 ;; Author: Nikolaj Schumacher <bugs * nschum de>,
 ;; Maintainer: Neil Okamoto <neil.okamoto+melpa@gmail.com>
-;; Version: 0.4.0
+;; Version: 0.5.0-SNAPSHOT
 ;; Keywords: lisp, maint, tools
 ;; Package-Requires: ((emacs "24.4") (dash "2.15.0") (package-lint "0.11"))
 ;; URL: http://github.com/gonewest818/elisp-lint/
@@ -47,6 +47,8 @@
 ;;
 ;;; Change Log:
 ;;
+;; * Version 0.5-SNAPSHOT (MELPA)
+;;    - no changes yet
 ;; * Version 0.4 (MELPA Stable, March 2020)
 ;;    - Provide a summary report of all tests [#20]
 ;;    - Integrate 'package-lint' [#19]
