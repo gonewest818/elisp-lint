@@ -48,7 +48,8 @@
 ;;; Change Log:
 ;;
 ;; * Version 0.5-SNAPSHOT (MELPA)
-;;    - no changes yet
+;;    - suppress "Package X is not installable" errors when running in
+;;      a context where 'package-initialize' hasn't occurred
 ;; * Version 0.4 (MELPA Stable, March 2020)
 ;;    - Provide a summary report of all tests [#20]
 ;;    - Integrate 'package-lint' [#19]
@@ -79,6 +80,7 @@
 (require 'bytecomp)
 (require 'check-declare)
 (require 'checkdoc nil t)
+(require 'package)
 (require 'package-lint)
 (require 'subr-x)
 (require 'dash)
@@ -243,14 +245,26 @@ Parse warnings and return in a list, or nil if no errors found."
 (defun elisp-lint--package-lint ()
   "Run package-lint on buffer and return results.
 Result is a list of one item per line having an error, and each
-entry contains: (LINE COLUMN TYPE MESSAGE)"
-  (-map
-   (lambda (item)
-     (-update-at 2 (lambda (s)
-                     (make-symbol (concat "package-lint-"
-                                          (symbol-name s))))
-                 item))
-   (package-lint-buffer)))
+entry contains: (LINE COLUMN TYPE MESSAGE)
+
+Because package-lint uses the package library to validate when
+dependencies can be installed, this function checks for when the
+package library has NOT been initialized, and suppresses the
+inevitable \"not installable\" errors in that case."
+  (let ((err (-map
+              (lambda (item)
+                (-update-at 2
+                            (lambda (s)
+                              (make-symbol (concat "package-lint:"
+                                                   (symbol-name s))))
+                            item))
+              (package-lint-buffer))))
+    (if package-archive-contents        ; if package.el is initialized?
+        err                             ; return the errors
+      (-remove                          ; else remove "not installable"
+       (lambda (item)
+         (string-match "^Package [^ ]+ is not installable." (nth 3 item)))
+       err))))
 
 (defun elisp-lint--next-diff ()
   "Search via regexp for the next diff in the current buffer.

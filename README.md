@@ -56,18 +56,27 @@ have unlimited length:
  
 ### indent ###
 
-Verifies that each line is indented according to `emacs-lisp-mode`. Where macros
-are defined with special `indent` metadata, use the `elisp-lint-indent-specs` alist
-to specify each symbol's required indent.
+Verifies that each line is indented according to
+`emacs-lisp-mode`. Where macros are defined with special `indent`
+metadata, use the `elisp-lint-indent-specs` alist to specify each
+symbol's required indent.
 
 ### indent-character ###
 
-Verifies the indentation is consistently tabs or spaces, according to the value
-of `indent-tabs-mode`.
+Verifies the indentation is consistently tabs or spaces, according to
+the value of `indent-tabs-mode`.
 
 ### package-lint ###
 
-Use `package-lint` to perform checks on package metadata and elisp style.
+Use `package-lint` to perform checks on package metadata and elisp
+style.
+
+Because this check uses the `package` library to validate when
+dependencies can be installed from an available package repository,
+this check will suppress any "package is not installable" errors when
+running in a context where the `package` library is not initialized.
+This can happen, e.g. when running Emacs on packages installed with
+Cask.
 
 ### trailing-whitespace ###
 
@@ -76,8 +85,8 @@ Verifies the buffer has no lines with trailing whitespace.
 Configuration
 -------------
 
-Use a file variable or `.dir-locals.el` to override the variables mentioned
-above.
+Use a file variable or `.dir-locals.el` to override the variables
+mentioned above.
 
 Sample Report
 -------------
