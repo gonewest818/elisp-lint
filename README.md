@@ -48,11 +48,11 @@ have unlimited length:
 
 * The package summary comment line, which by definition must
   include the package name, a summary description (up to 60
-  characters), and an optional \"-*- lexical-binding:t -*-\"
+  characters), and an optional `-*- lexical-binding:t -*-`
   declaration.
 
 * The \"Package-Requires\" header, whose length is determined by
-  the number of dependencies specified."
+  the number of dependencies specified.
  
 ### indent ###
 
@@ -119,15 +119,19 @@ test/data/example.el FAIL
 Changelog
 ---------
 
-* Version 0.4-SNAPSHOT (available on MELPA)
+* Version 0.5-SNAPSHOT (MELPA)
+   - suppress "Package X is not installable" errors when running in
+     a context where 'package-initialize' hasn't occurred
+* Version 0.4-SNAPSHOT (MELPA Stable, March 2020)
    - Provide a summary report of all tests [#20]
    - Integrate package-lint [#19]
    - Remove package-format, as package-lint covers the same territory
    - Make byte-compile errors and warnings more robust
    - Make the fill-column checker ignore the package summary line [#25]
+   - Make 'fill-column' checker ignore the package requires header
    - Add dependency on dash.el
    - Colorized output
-* Version 0.3 (MELPA Stable)
+* Version 0.3 (December 2019)
    - Emacs 23 support is deprecated [#13]
    - Adopt CircleCI and drop Travis CI [#9] [#14]
    - Add check-declare validator [#16]
