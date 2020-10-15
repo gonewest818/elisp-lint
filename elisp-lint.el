@@ -362,6 +362,18 @@ Use a file variable or \".dir-locals.el\" to override the default value."
   "^;;[ \t]+Package-Requires:"
   "This regexp must match the definition in package.el.")
 
+(defvar elisp-lint--url-in-document-regexp
+  (concat "^"
+          "[[:blank:]]*"
+          "\\(?:;+\\|\"\\)?"
+          "[[:blank:]]*"
+          "https?://"
+          "[][;,/?:@&=+$_.!~*'()#%[:alnum:]-]+"
+          "[[:blank:]]*\"?[[:blank:]]*"
+          "[[:blank:]]*)*[[:blank:]]*"
+          "$")
+  "This regexp must match a URL in comments or strings.")
+
 (defun elisp-lint--fill-column ()
   "Confirm buffer has no lines exceeding `fill-column' in length.
 Use a file variable or \".dir-locals.el\" to override the default
@@ -376,7 +388,9 @@ have unlimited length:
   declaration.
 
 * The \"Package-Requires\" header, whose length is determined by
-  the number of dependencies specified."
+  the number of dependencies specified.
+
+* Long URLs in comments or strings."
   (save-excursion
     (let ((line-number 1)
           (too-long-lines nil))
@@ -388,6 +402,7 @@ have unlimited length:
           (when
               (and (not (string-match elisp-lint--package-summary-regexp text))
                    (not (string-match elisp-lint--package-requires-regexp text))
+                   (not (string-match elisp-lint--url-in-document-regexp text))
                    (> (length text) fill-column))
             (push (list line-number 0 'fill-column
                         (format "line length %s exceeded" fill-column))
