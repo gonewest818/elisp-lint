@@ -429,12 +429,23 @@ Allow `page-delimiter' if it is alone on a line."
     (white   . 37))
   "ANSI color escape codes.")
 
+(defconst elisp-lint--no-color
+  (let ((term (getenv-internal "TERM"))
+        (no-color (getenv-internal "NO_COLOR")))
+    (or (and (stringp term) (string= term "dumb"))
+        (and (stringp no-color) (> (length no-color) 0))))
+  "Disable colored text via the environment: NO_COLOR non-empty OR TERM=dumb.")
+
 (defun elisp-lint--print (color fmt &rest args)
   "Print output text in COLOR, formatted according to FMT and ARGS."
-  (let ((ansi-val (cdr (assoc color elisp-lint--ansi-colors)))
-        (cfmt (concat "\u001b[%sm" fmt  "\u001b[0m")))
-    (princ (apply #'format cfmt ansi-val args))
-    (terpri)))
+  (if elisp-lint--no-color
+      (progn
+	(princ (apply #'format fmt args))
+	(terpri))
+    (let ((ansi-val (cdr (assoc color elisp-lint--ansi-colors)))
+          (cfmt (concat "\u001b[%sm" fmt  "\u001b[0m")))
+      (princ (apply #'format cfmt ansi-val args))
+      (terpri))))
 
 ;;; Linting
 
