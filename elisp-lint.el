@@ -167,7 +167,8 @@ Return a list of errors, or nil if none found."
         (file (file-name-nondirectory path-to-file)))
     (unless elisp-lint--autoloads-filename
       (elisp-lint--generate-autoloads))
-    (load-file elisp-lint--autoloads-filename)
+    (if elisp-lint--autoloads-filename
+	(load-file elisp-lint--autoloads-filename))
     (when (get-buffer comp-log) (kill-buffer comp-log))
     (byte-compile-file path-to-file)
     (with-current-buffer comp-log
