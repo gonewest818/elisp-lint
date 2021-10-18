@@ -445,8 +445,8 @@ Allow `page-delimiter' if it is alone on a line."
   "Print output text in COLOR, formatted according to FMT and ARGS."
   (if elisp-lint--no-color
       (progn
-	(princ (apply #'format fmt args))
-	(terpri))
+        (princ (apply #'format fmt args))
+        (terpri))
     (let ((ansi-val (cdr (assoc color elisp-lint--ansi-colors)))
           (cfmt (concat "\u001b[%sm" fmt  "\u001b[0m")))
       (princ (apply #'format cfmt ansi-val args))
