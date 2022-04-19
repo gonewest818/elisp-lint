@@ -1,7 +1,7 @@
 ;;; elisp-lint.el --- Basic linting for Emacs Lisp  -*- lexical-binding:t -*-
 ;;
 ;; Copyright (C) 2013-2015 Nikolaj Schumacher
-;; Copyright (C) 2018-2020 Neil Okamoto
+;; Copyright (C) 2018-2022 Neil Okamoto
 ;;
 ;; Author: Nikolaj Schumacher <bugs * nschum de>,
 ;; Maintainer: Neil Okamoto <neil.okamoto+melpa@gmail.com>
@@ -50,6 +50,7 @@
 ;; * Version 0.5-SNAPSHOT (MELPA)
 ;;    - suppress "Package X is not installable" errors when running in
 ;;      a context where 'package-initialize' hasn't occurred
+;;    - Make 'fill-column' checker ignore URLs in comments or strings [#29]
 ;; * Version 0.4 (MELPA Stable, March 2020)
 ;;    - Provide a summary report of all tests [#20]
 ;;    - Integrate 'package-lint' [#19]
@@ -372,7 +373,7 @@ Use a file variable or \".dir-locals.el\" to override the default value."
           "[[:blank:]]*"
           "\\(?:;+\\|\"\\)?"
           "[[:blank:]]*"
-          "https?://"
+          "[a-zA-Z][a-zA-Z0-9\-+.]*://"
           "[][;,/?:@&=+$_.!~*'()#%[:alnum:]-]+"
           "[[:blank:]]*\"?[[:blank:]]*"
           "[[:blank:]]*)*[[:blank:]]*"
