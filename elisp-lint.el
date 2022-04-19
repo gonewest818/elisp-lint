@@ -83,6 +83,7 @@
 (require 'package)
 (require 'package-lint)
 (require 'subr-x)
+(require 'url)
 (require 'dash)
 
 (defconst elisp-lint-file-validators
@@ -367,6 +368,16 @@ Use a file variable or \".dir-locals.el\" to override the default value."
   "^;;[ \t]+Package-Requires:"
   "This regexp must match the definition in package.el.")
 
+(defvar elisp-lint--url-regexp
+  "[a-zA-Z][-a-zA-Z0-9+.]*://"
+  "Matches text that (probably) contains a URL.
+
+   As a heuristic, the presence of a type (scheme) and `//' is
+   used.  Other parts of the URL are not considered, since pretty
+   much anything may be part of a legitimate URL.  This neither
+   matches all possible URLs, nor does it match all non-URLs, but
+   it should be good enough.")
+
 (defun elisp-lint--fill-column ()
   "Confirm buffer has no lines exceeding `fill-column' in length.
 Use a file variable or \".dir-locals.el\" to override the default
@@ -393,6 +404,7 @@ have unlimited length:
           (when
               (and (not (string-match elisp-lint--package-summary-regexp text))
                    (not (string-match elisp-lint--package-requires-regexp text))
+                   (not (string-match elisp-lint--url-regexp text))
                    (> (length text) fill-column))
             (push (list line-number 0 'fill-column
                         (format "line length %s exceeded" fill-column))
